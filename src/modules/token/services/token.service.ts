@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import UAParser from 'ua-parser-js';
 
 import appConfig from '../../../config/app.config';
+import authConfig from '../../../config/auth.config';
 import User from '../../../modules/user/models/user.model';
 
 import { AppUser } from '../../user/interfaces/app-user.interface';
@@ -61,7 +62,7 @@ export class TokenService {
       const {
         user: { id },
       } = jwt.decode(refreshToken) as { user: AppUser };
-      userId: id;
+      userId = id;
     } catch (err) {
       return {};
     }
@@ -91,6 +92,46 @@ export class TokenService {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     };
+  }
+
+  async rejectTokens(refreshToken: string) {
+    return new Promise(async (resolve, reject) => {
+      if (refreshToken) {
+        let userId = null;
+        try {
+          const {
+            user: { id },
+          } = jwt.decode(refreshToken) as { user: AppUser };
+          userId = id;
+        } catch (err) {
+          return reject();
+        }
+
+        if (!userId) {
+          return reject();
+        }
+
+        const user = await User.findOne({ _id: userId }).select('+password');
+
+        if (!user) {
+          return reject();
+        }
+
+        const refreshSecret = appConfig.REFRESH_KEY + user.password;
+
+        try {
+          jwt.verify(refreshToken as string, refreshSecret);
+        } catch (error: any) {
+          if (error.name === authConfig.tokenErrors.TOKEN_EXPIRATION_ERROR) {
+            return resolve(await Token.deleteMany({ userId }));
+          } else {
+            return reject();
+          }
+        }
+
+        return resolve(await Token.deleteMany({ userId }));
+      }
+    });
   }
 }
 

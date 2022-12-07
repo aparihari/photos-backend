@@ -7,6 +7,7 @@ import appConfig from '../../../config/app.config';
 import authConfig from '../../../config/auth.config';
 import tokenService from '../services/token.service';
 import responseService from '../../../modules/util/services/response.service';
+import messageConfig from '../../../config/message.config';
 
 export const refreshTokens = async (req: Request, res: Response) => {
   const accessToken =
@@ -30,6 +31,24 @@ export const refreshTokens = async (req: Request, res: Response) => {
   }
 
   return responseService.failedAuthentication(httpStatus.UNAUTHORIZED, res);
+};
+
+export const rejectTokens = async (req: Request, res: Response) => {
+  const refreshToken = req.headers['x-refresh-token'] as string;
+
+  if (refreshToken) {
+    try {
+      await tokenService.rejectTokens(refreshToken);
+    } catch (error) {
+      return responseService.failedAuthentication(httpStatus.UNAUTHORIZED, res);
+    }
+  }
+
+  return res.json(
+    await responseService.getSuccessResponse({
+      message: messageConfig.TOKEN.TOKENS_DELETED,
+    }),
+  );
 };
 
 export const saveLoggedInUser = (
