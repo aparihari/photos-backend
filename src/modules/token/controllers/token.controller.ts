@@ -42,13 +42,15 @@ export const rejectTokens = async (req: Request, res: Response) => {
     } catch (error) {
       return responseService.failedAuthentication(httpStatus.UNAUTHORIZED, res);
     }
+
+    return res.json(
+      await responseService.getSuccessResponse({
+        message: messageConfig.TOKEN.TOKENS_DELETED,
+      }),
+    );
   }
 
-  return res.json(
-    await responseService.getSuccessResponse({
-      message: messageConfig.TOKEN.TOKENS_DELETED,
-    }),
-  );
+  return responseService.failedAuthentication(httpStatus.UNAUTHORIZED, res);
 };
 
 export const saveLoggedInUser = (

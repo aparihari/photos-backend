@@ -4,6 +4,7 @@ import responseService from '../../../modules/util/services/response.service';
 import { EnhancedRequest } from '../../../common/interfaces/enhanced-request.interface';
 import authService from '../services/auth.service';
 import userService from '../../../modules/user/services/user.service';
+import { rejectTokens } from '../../../modules/token/controllers/token.controller';
 
 export const login = async (
   req: Request,
@@ -30,6 +31,14 @@ export const signup = async (
     next(error);
   }
 };
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  return rejectTokens(req, res);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 

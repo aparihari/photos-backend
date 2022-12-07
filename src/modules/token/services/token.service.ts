@@ -131,6 +131,8 @@ export class TokenService {
 
         return resolve(await Token.deleteMany({ userId }));
       }
+
+      reject();
     });
   }
 }
